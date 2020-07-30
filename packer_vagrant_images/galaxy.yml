@@ -1,0 +1,21 @@
+namespace: rodrigobrim
+name: packer_vagrant_images
+version: 0.0.11
+
+authors:
+  - Rodrigo Brim
+  - rodrigobrim@gmail.com
+  - https://github.com/rodrigobrim
+  - https://www.youtube.com/channel/UCqwSeQVbzKDZF6dBXpzL6wA
+
+description: |
+  Collection para criar imagens no packer
+readme: README.md
+
+license: ["MIT"]
+tags:
+  - vagrant
+  - packer
+  - virtualbox
+   
+repository:

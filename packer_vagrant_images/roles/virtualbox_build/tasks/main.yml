@@ -1,0 +1,43 @@
+---
+- name: "Carrega o {{ virtualbox_build_path }}/config.yml"
+  include_vars:
+    file: "{{ virtualbox_build_path }}/config.yml"
+
+- name: Captura as informacoes do box do Vagrant
+  uri:
+    url: https://app.vagrantup.com/api/v1/box/{{ virtualbox_build_username }}/{{ virtualbox_build_box_name }}
+    return_content: true
+    status_code:
+      - 200
+      - 404
+  register: virtualbox_build_box_info
+
+- name: Isola a versao atual do box
+  set_fact:
+    virtualbox_build_box_version: "{{ (virtualbox_build_box_info.content | from_json).current_version.version | default('0.0.0') }}"
+
+- name: Aumenta a versao do box
+  set_fact:
+          virtualbox_build_box_next_version: "{{ virtualbox_build_box_version.split('.')[0] }}.{{ virtualbox_build_box_version.split('.')[1] }}.{{ virtualbox_build_box_version.split('.')[2] | int + 1 }}"
+
+- name: Carrega as variaveis do arquivo {{ virtualbox_build_path }}/config.yml"
+  include_vars:
+    file: "{{ virtualbox_build_path }}/config.yml"
+
+- name: Aplica o template {{ virtualbox_build_json }}
+  template:
+    src: "{{ virtualbox_build_path }}/templates/{{ virtualbox_build_json }}.j2"
+    dest: "{{ virtualbox_build_path }}/{{ virtualbox_build_json }}"
+  vars:
+    version: "{{ virtualbox_build_box_next_version }}"
+
+- name: "JSON de configuração do Packer que será aplicado"
+  pause:
+    prompt: |
+      "{{ lookup('file', virtualbox_build_path + '/' + virtualbox_build_json) }}"
+    seconds: 1
+
+- name: Faz o build do box {{ virtualbox_build_username }}/{{ virtualbox_build_box_name }} na versao {{ virtualbox_build_box_next_version }}
+  shell: packer build {{ virtualbox_build_json }}
+  args:
+    chdir: "{{ virtualbox_build_path }}"
